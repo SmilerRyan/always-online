@@ -14,7 +14,13 @@ allprojects {
     repositories {
         mavenCentral()
         mavenLocal()
-        maven { url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
+        maven {
+            url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+            content {
+                includeGroup 'org.bukkit'
+                includeGroup 'org.spigotmc'
+            }
+        }
         maven { url = 'https://oss.sonatype.org/content/repositories/snapshots' }
         maven { url = 'https://ci.lucko.me/plugin/repository/everything/' }
         maven { url = 'https://nexus.velocitypowered.com/repository/maven-public/' }
@@ -37,7 +43,7 @@ subprojects {
     }
 
     ext {
-        bukkitVersion = '1.14-R0.1-SNAPSHOT'
+        bukkitVersion = '1.20.2-R0.1-SNAPSHOT'
         aoVersion = plVersion
     }
 }
