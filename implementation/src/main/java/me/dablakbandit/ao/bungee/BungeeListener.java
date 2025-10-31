@@ -31,37 +31,19 @@ public class BungeeListener extends ProxyListener implements Listener {
 		// Make sure it is not canceled
 		if (event.isCancelled()) return;
 		if (bungeeLoader.getAOInstance().getOfflineMode()) {// Make sure we are in mojang offline mode
-			// Verify if the name attempting to connect is even verified
-			if (!this.validate(event.getConnection().getName())) {
-				event.setCancelReason(this.bungeeLoader.alwaysOnline.config.getProperty("message-kick-invalid", "Invalid username. Hacking?"));
-				event.setCancelled(true);
-				return;
-
-			}
 			// Initialize our hacky stuff
 			InitialHandler handler = (InitialHandler) event.getConnection();
 			// Get the connecting ip
 			final String ip = handler.getAddress().getAddress().getHostAddress();
-			// Get last known ip
-			final String lastip = this.bungeeLoader.alwaysOnline.database.getIP(event.getConnection().getName());
-			if (lastip == null) {// If null the player connecting is new
-				event.setCancelReason(this.bungeeLoader.alwaysOnline.config.getProperty("message-kick-new", "We can not let you join because the mojang servers are offline!"));
-				event.setCancelled(true);
-				this.bungeeLoader.getLogger().info("Denied " + event.getConnection().getName() + " from logging in cause their ip [" + ip + "] has never connected to this server before!");
-			} else {
-				if (ip.equals(lastip)) {// If it matches set handler to offline mode, so it does not authenticate player with mojang
-					boolean onlineMode = handler.isOnlineMode();
-					this.bungeeLoader.getLogger().info("Skipping session login for player " + event.getConnection().getName() + " [Connected ip: " + ip + ", Last ip: " + lastip + "]!");
-					handler.setOnlineMode(false);
-					UUID uuid = this.bungeeLoader.alwaysOnline.database.getUUID(event.getConnection().getName());
+			if (ip.equals("127.0.0.1")) {
+				this.bungeeLoader.getLogger().info("Skipping session login for player " + event.getConnection().getName() + " [Connected ip: " + ip + "]!");
+				boolean onlineMode = handler.isOnlineMode();
+				handler.setOnlineMode(false);
+				UUID uuid = this.bungeeLoader.alwaysOnline.database.getUUID(event.getConnection().getName());
+				if(uuid != null) {
 					handler.setUniqueId(uuid);
-					handler.setOnlineMode(onlineMode);
-				} else {// Deny the player from joining
-					this.bungeeLoader.getLogger().info("Denied " + event.getConnection().getName() + " from logging in cause their ip [" + ip + "] does not match their last ip!");
-					handler.setOnlineMode(true);
-					event.setCancelReason(this.bungeeLoader.alwaysOnline.config.getProperty("message-kick-ip", "We can not let you join since you are not on the same computer you logged on before!"));
-					event.setCancelled(true);
 				}
+				handler.setOnlineMode(onlineMode);
 			}
 		}
 	}
@@ -71,15 +53,16 @@ public class BungeeListener extends ProxyListener implements Listener {
 		if (event.isCancelled()) return;
 		if (bungeeLoader.getAOInstance().getOfflineMode()) {// Make sure we are in mojang offline mode
 			InitialHandler handler = (InitialHandler) event.getConnection();
-			UUID uuid = this.bungeeLoader.alwaysOnline.database.getUUID(event.getConnection().getName());
-			if (!uuid.equals(handler.getUniqueId())) {
-				this.bungeeLoader.getLogger().info("Updating Login UUID for " + event.getConnection().getName() + " to " + uuid.toString() + "!");
-				boolean onlineMode = handler.isOnlineMode();
-				handler.setOnlineMode(false);
-				handler.setUniqueId(uuid);
-				handler.setOnlineMode(onlineMode);
-			} else {
-				this.bungeeLoader.getLogger().info("Login UUID for " + event.getConnection().getName() + " is already set to " + uuid.toString() + "!");
+			final String ip = handler.getAddress().getAddress().getHostAddress();
+			if (ip.equals("127.0.0.1")) {
+				UUID uuid = this.bungeeLoader.alwaysOnline.database.getUUID(event.getConnection().getName());
+				if (uuid != null && !uuid.equals(handler.getUniqueId())) {
+					this.bungeeLoader.getLogger().info("Updating Login UUID for " + event.getConnection().getName() + " to " + uuid.toString() + "!");
+					boolean onlineMode = handler.isOnlineMode();
+					handler.setOnlineMode(false);
+					handler.setUniqueId(uuid);
+					handler.setOnlineMode(onlineMode);
+				}
 			}
 		}
 	}

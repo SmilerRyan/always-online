@@ -27,31 +27,12 @@ public class VelocityListener extends ProxyListener {
 	@Subscribe(order = PostOrder.LAST)
 	public void onPreLogin(PreLoginEvent event) {
 		if (velocityLoader.getAOInstance().getOfflineMode()) {// Make sure we are in mojang offline mode
-			// Verify if the name attempting to connect is even verified
-			if (!this.validate(event.getUsername())) {
-				event.setResult(PreLoginEvent.PreLoginComponentResult.denied(LegacyComponentSerializer.legacy('&').deserialize(this.velocityLoader.alwaysOnline.config.getProperty("message-kick-invalid", "Invalid username. Hacking?"))));
-				return;
-
-			}
 			// Get the connecting ip
 			final String ip = event.getConnection().getRemoteAddress().getAddress().getHostAddress();
-			// Get last known ip
-			final String lastip = this.velocityLoader.alwaysOnline.database.getIP(event.getUsername());
-
-
-			if (lastip == null) {// If null the player connecting is new
-				event.setResult(PreLoginEvent.PreLoginComponentResult.denied(LegacyComponentSerializer.legacy('&').deserialize(this.velocityLoader.alwaysOnline.config.getProperty("message-kick-new", "We can not let you join because the mojang servers are offline!"))));
-				this.velocityLoader.getLogger().info("Denied " + event.getUsername() + " from logging in cause their ip [" + ip + "] has never connected to this server before!");
-			} else {
-				if (ip.equals(lastip)) {// If it matches set handler to offline mode, so it does not authenticate player with mojang
-					this.velocityLoader.getLogger().info("Skipping session login for player " + event.getUsername() + " [Connected ip: " + ip + ", Last ip: " + lastip + "]!");
-					event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
-					//handler.setOnlineMode(false);
-				} else {// Deny the player from joining
-					this.velocityLoader.getLogger().info("Denied " + event.getUsername() + " from logging in cause their ip [" + ip + "] does not match their last ip!");
-					//handler.setOnlineMode(true);
-					event.setResult(PreLoginEvent.PreLoginComponentResult.denied(LegacyComponentSerializer.legacy('&').deserialize(this.velocityLoader.alwaysOnline.config.getProperty("message-kick-ip", "We can not let you join since you are not on the same computer you logged on before!"))));
-				}
+			if(ip.equals("127.0.0.1")){
+				this.velocityLoader.getLogger().info("Skipping session login for player " + event.getUsername() + " [Connected ip: " + ip + "]!");
+				event.setResult(PreLoginEvent.PreLoginComponentResult.forceOfflineMode());
+				return;
 			}
 		}
 	}
