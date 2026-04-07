@@ -5,6 +5,13 @@ plugins {
 
 import org.apache.tools.ant.filters.ReplaceTokens
 
+configurations {
+    mysqlDriver {
+        canBeConsumed = false
+        canBeResolved = true
+    }
+}
+
 dependencies {
     implementation project(':common')
     implementation project(':1_14_plus')
@@ -16,10 +23,21 @@ dependencies {
     compileOnly 'net.md-5:bungeecord-api:1.20-R0.3-SNAPSHOT'
     compileOnly 'net.md-5:bungeecord-proxy:1.20-R0.3-SNAPSHOT'
     compileOnly 'com.velocitypowered:velocity-api:3.0.1'
+
+    mysqlDriver('com.mysql:mysql-connector-j:8.0.33') {
+        transitive = false
+    }
+}
+
+task copyEmbeddedMysqlDriver(type: Copy) {
+    from configurations.mysqlDriver
+    into layout.buildDirectory.dir('generated-resources/mysql-libs')
 }
 
 processResources {
+    dependsOn copyEmbeddedMysqlDriver
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    // Don't include generated-resources here to avoid shadowJar unpacking the jar
     with copySpec {
         from 'src/main/resources'
         filter ReplaceTokens, tokens: [
@@ -44,15 +62,27 @@ compileJava {
 }
 
 shadowJar {
-    archiveClassifier = ''
-    destinationDirectory = file("$projectDir/target")
-    archiveFileName = "${project.name}-${project.version}-shaded.jar"
+    archiveClassifier = 'shadow'
 }
 
-task copyToOutput(type: Copy, dependsOn: shadowJar) {
-    from shadowJar.archiveFile
+task finalJar(type: Zip) {
+    dependsOn shadowJar, copyEmbeddedMysqlDriver
+
+    from(zipTree(shadowJar.archiveFile))
+    from(configurations.mysqlDriver) {
+        into 'lib'
+    }
+
+    archiveExtension = 'jar'
+    destinationDirectory = file("$projectDir/target")
+    archiveFileName = "${project.name}-${project.version}-shaded.jar"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+task copyToOutput(type: Copy, dependsOn: finalJar) {
+    from finalJar.archiveFile
     into "$rootDir/output"
-    rename(shadowJar.archiveFileName.get(), "${rootProject.name}-latest.jar")
+    rename(finalJar.archiveFileName.get(), "${rootProject.name}-latest.jar")
 }
 
 build.finalizedBy copyToOutput

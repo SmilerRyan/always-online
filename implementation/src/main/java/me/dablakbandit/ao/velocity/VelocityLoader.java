@@ -18,10 +18,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.slf4j.Logger;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.nio.file.Path;
-import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +28,9 @@ import java.util.logging.Level;
 @Plugin(id = "alwaysonline", name = "Always Online", version = "@version@", url = "https://www.spigotmc.org/resources/alwaysonline.66591/", description = "Keep your server running while mojang is offline, Supports all server versions!", authors = "Dablakbandit")
 public class VelocityLoader implements NativeExecutor {
 
+	private static final String MYSQL_DRIVER_FILE_NAME = "mysql-connector-j-8.0.33.jar";
+	private static final String MYSQL_DRIVER_RESOURCE_PATH = "lib/" + MYSQL_DRIVER_FILE_NAME;
+
 	public final AlwaysOnline alwaysOnline = new AlwaysOnline(this);
 	public final ProxyServer server;
 	private final Logger logger;
@@ -38,7 +38,8 @@ public class VelocityLoader implements NativeExecutor {
 	private final Metrics.Factory metricsFactory;
 
 	@Inject
-	public VelocityLoader(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory, Metrics.Factory metricsFactory) {
+	public VelocityLoader(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory,
+			Metrics.Factory metricsFactory) {
 		this.server = server;
 		this.logger = logger;
 		this.dataDirectory = dataDirectory;
@@ -73,7 +74,12 @@ public class VelocityLoader implements NativeExecutor {
 		if (!libsFolder.exists()) {
 			libsFolder.mkdirs();
 		}
-		for (File file : libsFolder.listFiles()) {
+		extractEmbeddedMysqlDriver(libsFolder);
+		File[] libFiles = libsFolder.listFiles();
+		if (libFiles == null) {
+			return;
+		}
+		for (File file : libFiles) {
 			if (file.getName().endsWith(".jar")) {
 				logger.info(file.getName());
 				server.getPluginManager().addToClasspath(this, file.toPath());
@@ -166,66 +172,40 @@ public class VelocityLoader implements NativeExecutor {
 
 	@Override
 	public void initMySQL() {
+		try {
+			Class.forName("com.mysql.cj.jdbc.Driver");
+			return;
+		} catch (Exception | Error ignored) {
+		}
 		loadLibs();
 		try {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			return;
 		} catch (Exception | Error ignored) {
 		}
-
-		String url = "https://repo1.maven.org/maven2/com/mysql/mysql-connector-j/8.0.33/mysql-connector-j-8.0.33.jar";
-
-		File libsFolder = new File(this.dataFolder().toFile(), "/libs/");
-		File libFile = new File(libsFolder, "mysql-connector-j-8.0.33.jar");
-		try {
-
-			HttpURLConnection httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
-			httpURLConnection.setDoInput(true);
-			httpURLConnection.setDoOutput(false);
-			httpURLConnection.connect();
-
-			int repCode = httpURLConnection.getResponseCode();
-
-			if (repCode == 200) {
-				try (InputStream inputStream = httpURLConnection.getInputStream(); FileOutputStream fileOutputStream = new FileOutputStream(libFile)) {
-					byte[] b = new byte[1024];
-					int n;
-					while ((n = inputStream.read(b)) != -1) {
-						fileOutputStream.write(b, 0, n);
-					}
-					fileOutputStream.flush();
-				}
-				if (!sha1(libFile).equals("9e64d997873abc4318620264703d3fdb6b02dd5a")) {
-					libFile.delete();
-					getLogger().error("Failed to download mysql driver");
-				} else {
-					logger.info(libFile.getName());
-					server.getPluginManager().addToClasspath(this, libFile.toPath());
-					Class.forName("com.mysql.cj.jdbc.Driver");
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		logger.error("Failed to load embedded mysql driver " + MYSQL_DRIVER_FILE_NAME);
 	}
 
-	private String sha1(File file) throws Exception {
-		try (FileInputStream fis = new FileInputStream(file); ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream()) {
-			byte[] buff = new byte[1024];
-			int n;
-			while ((n = fis.read(buff)) > 0) {
-				arrayOutputStream.write(buff, 0, n);
+	private void extractEmbeddedMysqlDriver(File libsFolder) {
+		File libFile = new File(libsFolder, MYSQL_DRIVER_FILE_NAME);
+		if (libFile.exists()) {
+			return;
+		}
+		try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(MYSQL_DRIVER_RESOURCE_PATH)) {
+			if (inputStream == null) {
+				logger.warn("Embedded mysql driver resource missing: {}", MYSQL_DRIVER_RESOURCE_PATH);
+				return;
 			}
-			final byte[] digest = MessageDigest.getInstance("SHA-1").digest(arrayOutputStream.toByteArray());
-			StringBuilder sb = new StringBuilder();
-			for (byte aByte : digest) {
-				String temp = Integer.toHexString((aByte & 0xFF));
-				if (temp.length() == 1) {
-					sb.append("0");
+			try (OutputStream outputStream = new FileOutputStream(libFile)) {
+				byte[] buffer = new byte[8192];
+				int bytesRead;
+				while ((bytesRead = inputStream.read(buffer)) != -1) {
+					outputStream.write(buffer, 0, bytesRead);
 				}
-				sb.append(temp);
 			}
-			return sb.toString();
+			logger.info("Extracted {}", MYSQL_DRIVER_FILE_NAME);
+		} catch (IOException e) {
+			logger.error("Failed to extract embedded mysql driver {}", MYSQL_DRIVER_FILE_NAME, e);
 		}
 	}
 }
