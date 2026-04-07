@@ -76,8 +76,7 @@ public class SpongeLoader implements NativeExecutor {
 
 	@Override
 	public void cancelTask(Object taskID) {
-		if (taskID instanceof UUID) {
-			UUID uuid = (UUID) taskID;
+		if (taskID instanceof UUID uuid) {
 			game().server().scheduler().findTask(uuid).ifPresent(ScheduledTask::cancel);
 		}
 	}

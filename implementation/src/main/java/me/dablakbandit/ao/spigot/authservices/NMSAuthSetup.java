@@ -3,6 +3,7 @@ package me.dablakbandit.ao.spigot.authservices;
 import com.mojang.authlib.yggdrasil.Check_1_14;
 import com.mojang.authlib.yggdrasil.Check_1_16_4;
 import com.mojang.authlib.yggdrasil.Check_1_20_2;
+import com.mojang.authlib.yggdrasil.Check_26_1;
 import me.dablakbandit.ao.spigot.SpigotLoader;
 import me.dablakbandit.ao.utils.NMSUtils;
 
@@ -11,20 +12,63 @@ import java.util.logging.Level;
 
 public class NMSAuthSetup {
 
-	private static Class<?> classMinecraftServer = NMSUtils.getNMSClass("MinecraftServer");
-	private static Method setUsesAuthentication = NMSUtils.getMethodSilent(classMinecraftServer, new String[]{"setOnlineMode", "setUsesAuthentication", "d"}, boolean.class);
-	private static Method getServer = NMSUtils.getMethod(classMinecraftServer, "getServer");
+	private enum HookType {
+		NONE, V1_14, V1_16_4, V26_1, V1_20_2
+	}
+
+	private static final Class<?> classMinecraftServer = NMSUtils.getNMSClass("MinecraftServer");
+	private static final Method setUsesAuthentication = NMSUtils.getMethodSilent(classMinecraftServer, new String[]{"setOnlineMode", "setUsesAuthentication", "d"}, boolean.class);
+	private static final Method getServer = NMSUtils.getMethod(classMinecraftServer, "getServer");
+	private static HookType activeHook = HookType.NONE;
 
 	public static void setUp(SpigotLoader spigotLoader) throws Exception {
+		activeHook = HookType.NONE;
 		if (Check_1_14.valid()) {
 			spigotLoader.log(Level.INFO, "Attempting setup ~1_14 Auth service");
 			Check_1_14.setup(spigotLoader.getAOInstance());
+			activeHook = HookType.V1_14;
 		} else if (Check_1_16_4.valid()) {
 			spigotLoader.log(Level.INFO, "Attempting setup ~1_16 Auth service");
 			Check_1_16_4.setup(spigotLoader.getAOInstance());
+			activeHook = HookType.V1_16_4;
+		} else if (Check_26_1.valid()) {
+			spigotLoader.log(Level.INFO, "Attempting setup 26.1+ Auth service");
+			Check_26_1.setup(spigotLoader.getAOInstance());
+			activeHook = HookType.V26_1;
 		} else {
 			spigotLoader.log(Level.INFO, "Attempting setup 1.20+ Auth service");
 			Check_1_20_2.setup(spigotLoader.getAOInstance());
+			activeHook = HookType.V1_20_2;
+		}
+	}
+
+	public static void tearDown(SpigotLoader spigotLoader) {
+		try {
+			switch (activeHook) {
+				case V1_14:
+					spigotLoader.log(Level.INFO, "Restoring ~1_14 Auth service hooks");
+					Check_1_14.teardown();
+					break;
+				case V1_16_4:
+					spigotLoader.log(Level.INFO, "Restoring ~1_16 Auth service hooks");
+					Check_1_16_4.teardown();
+					break;
+				case V26_1:
+					spigotLoader.log(Level.INFO, "Restoring 26.1+ Auth service hooks");
+					Check_26_1.teardown();
+					break;
+				case V1_20_2:
+					spigotLoader.log(Level.INFO, "Restoring 1.20+ Auth service hooks");
+					Check_1_20_2.teardown();
+					break;
+				case NONE:
+				default:
+					break;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			activeHook = HookType.NONE;
 		}
 	}
 
@@ -38,6 +82,5 @@ public class NMSAuthSetup {
 			}
 		}
 	}
-
 
 }

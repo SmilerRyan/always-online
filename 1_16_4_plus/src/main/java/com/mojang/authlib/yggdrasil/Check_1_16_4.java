@@ -23,11 +23,13 @@ public class Check_1_16_4 {
 
 	private static final Field servicesSessionService = NMSUtils.getFirstFieldOfTypeSilent(servicesClass, MinecraftSessionService.class);
 
-	//ENVIRONMENT
+	// ENVIRONMENT
 	private static final Class<?> classEnvironment = NMSUtils.getClassSilent("com.mojang.authlib.Environment");
 	private static final Class<?> baseMinecraftSessionService = NMSUtils.getClassSilent("com.mojang.authlib.minecraft.BaseMinecraftSessionService");
 	private static final Field environment = NMSUtils.getFirstFieldOfTypeSilent(YggdrasilAuthenticationService.class, classEnvironment);
 	private static final Field baseAuthentificationService = NMSUtils.getFirstFieldOfTypeSilent(baseMinecraftSessionService, AuthenticationService.class);
+	private static Object originalSessionService;
+	private static Object originalServicesObject;
 
 	public static boolean valid() {
 		return baseAuthentificationService != null;
@@ -38,15 +40,18 @@ public class Check_1_16_4 {
 		YggdrasilMinecraftSessionService oldSessionService;
 		if (sessionService != null) {
 			oldSessionService = (YggdrasilMinecraftSessionService) sessionService.get(ms);
+			originalSessionService = oldSessionService;
 		} else {
-			oldSessionService = (YggdrasilMinecraftSessionService) servicesSessionService.get(fieldServices.get(ms));
+			Object oldService = fieldServices.get(ms);
+			originalServicesObject = oldService;
+			oldSessionService = (YggdrasilMinecraftSessionService) servicesSessionService.get(oldService);
 		}
 		YggdrasilAuthenticationService current = (YggdrasilAuthenticationService) baseAuthentificationService.get(oldSessionService);
 		Object service = new NMSAuthEnvironmentService(alwaysOnline, oldSessionService, current, (Environment) environment.get(current), alwaysOnline.getDatabase());
 		if (servicesClass == null) {
 			sessionService.set(ms, service);
 		} else {
-			//servicesSessionService.set(, service);
+			// servicesSessionService.set(, service);
 			Object oldService = fieldServices.get(ms);
 			List<Field> fields = NMSUtils.getFields(servicesClass);
 			fields = fields.stream().filter(field -> !Modifier.isStatic(field.getModifiers())).collect(Collectors.toList());
@@ -58,6 +63,22 @@ public class Check_1_16_4 {
 			}
 			Object customService = constructor.newInstance(objects);
 			fieldServices.set(ms, customService);
+		}
+	}
+
+	public static void teardown() throws Exception {
+		Object ms = getServer.invoke(null);
+		if (servicesClass == null) {
+			if (originalSessionService != null) {
+				sessionService.set(ms, originalSessionService);
+				originalSessionService = null;
+			}
+			return;
+		}
+
+		if (originalServicesObject != null) {
+			fieldServices.set(ms, originalServicesObject);
+			originalServicesObject = null;
 		}
 	}
 }

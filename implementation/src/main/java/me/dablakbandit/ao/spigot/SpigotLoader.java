@@ -52,7 +52,7 @@ public class SpigotLoader extends JavaPlugin implements NativeExecutor {
 		String databaseType = "FlatFile";
 		if (database instanceof MySQLDatabase) {
 			databaseType = "MySQL";
-		} else if ( database instanceof MongoDatabase){
+		} else if (database instanceof MongoDatabase) {
 			databaseType = "MongoDB";
 		}
 		String finalDatabaseType = databaseType;
@@ -61,6 +61,7 @@ public class SpigotLoader extends JavaPlugin implements NativeExecutor {
 
 	@Override
 	public void onDisable() {
+		NMSAuthSetup.tearDown(this);
 		this.alwaysOnline.disable();
 	}
 
@@ -147,7 +148,7 @@ public class SpigotLoader extends JavaPlugin implements NativeExecutor {
 	}
 
 	private void displayHelp(CommandSender sender) {
-		sender.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + "----------" + ChatColor.GOLD + "[" + ChatColor.DARK_GREEN + "AlwaysOnline " + ChatColor.GRAY + this.getDescription().getVersion() + "" + ChatColor.GOLD + "]" + ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + "----------");
+		sender.sendMessage(ChatColor.GOLD + "" + ChatColor.STRIKETHROUGH + "----------" + ChatColor.GOLD + "[" + ChatColor.DARK_GREEN + "AlwaysOnline " + ChatColor.GRAY + this.getDescription().getVersion() + ChatColor.GOLD + "]" + ChatColor.GOLD + ChatColor.STRIKETHROUGH + "----------");
 		sender.sendMessage(ChatColor.GOLD + "/alwaysonline toggle - " + ChatColor.DARK_GREEN + "Toggles between mojang online mode");
 		sender.sendMessage(ChatColor.GOLD + "/alwaysonline enable - " + ChatColor.DARK_GREEN + "Enables the plugin");
 		sender.sendMessage(ChatColor.GOLD + "/alwaysonline disable - " + ChatColor.DARK_GREEN + "Disables the plugin");

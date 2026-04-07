@@ -1,10 +1,10 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow' version '8.1.1' apply false
+    id 'com.gradleup.shadow' version '8.3.5' apply false
 }
 
 ext {
-    plVersion = '6.3.3'
+    plVersion = '6.3.4'
 }
 
 allprojects {

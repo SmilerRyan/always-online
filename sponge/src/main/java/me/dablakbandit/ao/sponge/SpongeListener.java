@@ -15,7 +15,7 @@ import java.util.UUID;
 public class SpongeListener extends ProxyListener {
 
 	private final SpongeLoader spongeLoader;
-	private Component MOTD;
+	private final Component MOTD;
 
 	public SpongeListener(SpongeLoader spongeLoader) {
 		super(spongeLoader);

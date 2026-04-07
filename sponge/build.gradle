@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow'
+    id 'com.gradleup.shadow'
 }
 
 compileJava {
@@ -60,6 +60,7 @@ shadowJar {
     archiveClassifier = ''
     destinationDirectory = file("$projectDir/target")
     archiveFileName = "always-online-sponge-${project.version}.jar"
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 task copyToOutput(type: Copy, dependsOn: shadowJar) {

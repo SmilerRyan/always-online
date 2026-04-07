@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'com.github.johnrengelman.shadow'
+        id 'com.gradleup.shadow'
 }
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -10,6 +10,7 @@ dependencies {
     implementation project(':1_14_plus')
     implementation project(':1_16_4_plus')
     implementation project(':1_20_2_plus')
+    implementation project(':26_1_plus')
 
     compileOnly 'org.spigotmc:spigot:1.14-R0.1-SNAPSHOT'
     compileOnly 'net.md-5:bungeecord-api:1.20-R0.3-SNAPSHOT'
@@ -51,7 +52,7 @@ shadowJar {
 task copyToOutput(type: Copy, dependsOn: shadowJar) {
     from shadowJar.archiveFile
     into "$rootDir/output"
-    rename { "${rootProject.name}-latest.jar" }
+    rename(shadowJar.archiveFileName.get(), "${rootProject.name}-latest.jar")
 }
 
 build.finalizedBy copyToOutput

@@ -92,7 +92,7 @@ public class FileDatabase implements Database {
 		}
 
 		for (Map.Entry<String, PlayerData> en : this.cache.entrySet()) {
-			w.println(en.getKey() + "|" + en.getValue().ipAddress + "|" + en.getValue().uuid.toString());
+			w.println(en.getKey() + "|" + en.getValue().ipAddress + "|" + en.getValue().uuid);
 		}
 		w.close();
 	}

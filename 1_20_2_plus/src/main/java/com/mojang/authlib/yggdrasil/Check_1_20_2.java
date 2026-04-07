@@ -28,6 +28,7 @@ public class Check_1_20_2 {
 	private static final Field fieldProxy = NMSUtils.getFirstFieldOfTypeSilent(classMinecraftClient, Proxy.class);
 
 	private static Constructor<?> conServices;
+	private static Object originalServices;
 
 	static {
 		try {
@@ -43,6 +44,7 @@ public class Check_1_20_2 {
 	public static void setup(IAlwaysOnline alwaysOnline) throws Exception {
 		MinecraftServer minecraftServer = (MinecraftServer) getServer.invoke(null);
 		Services services = (Services) fieldServices.get(minecraftServer);
+		originalServices = services;
 		YggdrasilMinecraftSessionService oldSessionService = (YggdrasilMinecraftSessionService) fieldServicesSessionService.get(services);
 		ServicesKeySet servicesKeySet = (ServicesKeySet) fieldServicesKeySet.get(oldSessionService);
 		Object minecraftClient = fieldMinecraftClient.get(oldSessionService);
@@ -59,6 +61,15 @@ public class Check_1_20_2 {
 
 		Object newServices = conServices.newInstance(objects);
 		fieldServices.set(minecraftServer, newServices);
+	}
+
+	public static void teardown() throws Exception {
+		if (originalServices == null) {
+			return;
+		}
+		MinecraftServer minecraftServer = (MinecraftServer) getServer.invoke(null);
+		fieldServices.set(minecraftServer, originalServices);
+		originalServices = null;
 	}
 
 }

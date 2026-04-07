@@ -15,6 +15,7 @@ public class Check_1_14 {
 	private static final Field sessionService = NMSUtils.getFirstFieldOfTypeSilent(classMinecraftServer, MinecraftSessionService.class);
 
 	private static final Field authentificationService = NMSUtils.getFirstFieldOfTypeSilent(classMinecraftServer, YggdrasilAuthenticationService.class);
+	private static Object originalSessionService;
 
 	public static boolean valid() {
 		return sessionService != null && authentificationService != null;
@@ -23,7 +24,17 @@ public class Check_1_14 {
 	public static void setup(IAlwaysOnline alwaysOnline) throws Exception {
 		Object ms = getServer.invoke(null);
 		YggdrasilMinecraftSessionService oldSessionService = (YggdrasilMinecraftSessionService) sessionService.get(ms);
+		originalSessionService = oldSessionService;
 		Object service = new NMSAuthService(alwaysOnline, oldSessionService, (YggdrasilAuthenticationService) authentificationService.get(ms), alwaysOnline.getDatabase());
 		sessionService.set(ms, service);
+	}
+
+	public static void teardown() throws Exception {
+		if (originalSessionService == null) {
+			return;
+		}
+		Object ms = getServer.invoke(null);
+		sessionService.set(ms, originalSessionService);
+		originalSessionService = null;
 	}
 }

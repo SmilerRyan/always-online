@@ -42,8 +42,14 @@ public class NMSAuthSessionService extends YggdrasilMinecraftSessionService {
 
 
 	public ProfileResult hasJoinedServer(String profileName, String serverId, InetAddress address) throws AuthenticationUnavailableException {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "Checking if " + profileName + " has joined the server with id " + serverId + " and address " + address);
+		}
 		if (alwaysOnline.getOfflineMode()) {
 			UUID uuid = this.database.getUUID(profileName);
+			if (alwaysOnline.isDebug()) {
+				alwaysOnline.getNativeExecutor().log(Level.INFO, "Got uuid " + uuid + " for profile name " + profileName + " from database");
+			}
 			if (uuid != null) {
 				this.uuidNameCache.put(uuid, Optional.of(new ProfileResult(new GameProfile(uuid, profileName))));
 				return new ProfileResult(new GameProfile(uuid, profileName));
@@ -58,10 +64,20 @@ public class NMSAuthSessionService extends YggdrasilMinecraftSessionService {
 
 
 	public ProfileResult fetchProfile(GameProfile profile, boolean requireSecure) {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "Fetching game profile " + profile.getName() + " with id " + profile.getId());
+		}
 		if (alwaysOnline.getOfflineMode()) {
-			return Objects.requireNonNull(uuidNameCache.getIfPresent(profile.getId())).orElse(null);
+			ProfileResult profileResult = Objects.requireNonNull(uuidNameCache.getIfPresent(profile.getId())).orElse(null);
+			if (alwaysOnline.isDebug()) {
+				alwaysOnline.getNativeExecutor().log(Level.INFO, "Fetched game profile " + profile.getName() + " with id " + profile.getId() + " from cache: " + (profileResult != null));
+			}
+			return profileResult;
 		}
 		try {
+			if (alwaysOnline.isDebug()) {
+				alwaysOnline.getNativeExecutor().log(Level.INFO, "Fetching game profile1 " + profile.getName() + " with id " + profile.getId());
+			}
 			return (ProfileResult) fetchProfile1.invoke(oldSessionService, profile, requireSecure);
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new RuntimeException(e);
@@ -70,14 +86,31 @@ public class NMSAuthSessionService extends YggdrasilMinecraftSessionService {
 
 
 	public ProfileResult fetchProfile(UUID profileId, boolean requireSecure) {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "Fetching uuid profile " + profileId);
+		}
 		if (alwaysOnline.getOfflineMode()) {
-			return Objects.requireNonNull(uuidNameCache.getIfPresent(profileId)).orElse(null);
+			ProfileResult profileResult = Objects.requireNonNull(uuidNameCache.getIfPresent(profileId)).orElse(null);
+			if (alwaysOnline.isDebug()) {
+				alwaysOnline.getNativeExecutor().log(Level.INFO, "Fetched uuid profile " + profileId + " from cache: " + (profileResult != null));
+			}
+			return profileResult;
 		}
 		try {
+			if (alwaysOnline.isDebug()) {
+				alwaysOnline.getNativeExecutor().log(Level.INFO, "Fetching uuid profile2 " + profileId + " from mojang servers");
+			}
 			return (ProfileResult) fetchProfile2.invoke(oldSessionService, profileId, requireSecure);
 		} catch (IllegalAccessException | InvocationTargetException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	private ProfileResult fetchProfileUncached(UUID profileId, boolean requireSecure) {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "Fetching uncached uuid profile " + profileId);
+		}
+		return fetchProfile(profileId, requireSecure);
 	}
 
 }

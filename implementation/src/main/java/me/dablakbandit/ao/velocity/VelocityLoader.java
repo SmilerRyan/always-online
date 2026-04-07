@@ -61,7 +61,7 @@ public class VelocityLoader implements NativeExecutor {
 		String databaseType = "FlatFile";
 		if (database instanceof MySQLDatabase) {
 			databaseType = "MySQL";
-		} else if ( database instanceof MongoDatabase){
+		} else if (database instanceof MongoDatabase) {
 			databaseType = "MongoDB";
 		}
 		String finalDatabaseType = databaseType;
@@ -210,7 +210,7 @@ public class VelocityLoader implements NativeExecutor {
 	}
 
 	private String sha1(File file) throws Exception {
-		try (FileInputStream fis = new FileInputStream(file); ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream();) {
+		try (FileInputStream fis = new FileInputStream(file); ByteArrayOutputStream arrayOutputStream = new ByteArrayOutputStream()) {
 			byte[] buff = new byte[1024];
 			int n;
 			while ((n = fis.read(buff)) > 0) {

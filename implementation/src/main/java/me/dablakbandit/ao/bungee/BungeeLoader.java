@@ -29,7 +29,7 @@ public class BungeeLoader extends Plugin implements NativeExecutor {
 		String databaseType = "FlatFile";
 		if (database instanceof MySQLDatabase) {
 			databaseType = "MySQL";
-		} else if ( database instanceof MongoDatabase){
+		} else if (database instanceof MongoDatabase) {
 			databaseType = "MongoDB";
 		}
 		String finalDatabaseType = databaseType;

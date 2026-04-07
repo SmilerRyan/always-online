@@ -49,8 +49,8 @@ public class NMSUtils {
 		}
 	}
 
-	private static Map<Class<?>, Method> handleMethods = new HashMap<>();
-	private static String version = getVersion();
+	private static final Map<Class<?>, Method> handleMethods = new HashMap<>();
+	private static final String version = getVersion();
 
 	public static String getVersion() {
 		try {
@@ -242,7 +242,6 @@ public class NMSUtils {
 								}
 								return null;
 							});
-							return;
 						}
 					}
 				}
@@ -486,7 +485,7 @@ public class NMSUtils {
 		return null;
 	}
 
-	public static Method getMethod(Class<?> clazz, String names[], Class<?>... args) {
+	public static Method getMethod(Class<?> clazz, String[] names, Class<?>... args) {
 		for (String name : names) {
 			for (Method m : clazz.getDeclaredMethods())
 				if (m.getName().equals(name) && (args.length == 0 && m.getParameterTypes().length == 0 || ClassListEqual(args, m.getParameterTypes()))) {
@@ -502,7 +501,7 @@ public class NMSUtils {
 		return null;
 	}
 
-	public static Method getMethodSilent(Class<?> clazz, String names[], Class<?>... args) {
+	public static Method getMethodSilent(Class<?> clazz, String[] names, Class<?>... args) {
 		try {
 			return getMethod(clazz, names, args);
 		} catch (Exception e) {

@@ -34,6 +34,9 @@ public class NMSAuthEnvironmentService extends YggdrasilMinecraftSessionService 
 	}
 
 	private GameProfile runSuper(GameProfile user, String serverId, InetAddress address) {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "Forwarding hasJoinedServer(user, serverId, address) to vanilla auth service for " + user.getName());
+		}
 		try {
 			MethodHandle handle = MethodHandles.lookup().findSpecial(YggdrasilMinecraftSessionService.class, "hasJoinedServer", MethodType.methodType(GameProfile.class, GameProfile.class, String.class, InetAddress.class), NMSAuthEnvironmentService.class);
 			return (GameProfile) handle.invokeWithArguments(this, user, serverId, address);
@@ -44,6 +47,9 @@ public class NMSAuthEnvironmentService extends YggdrasilMinecraftSessionService 
 	}
 
 	private GameProfile runSuper(GameProfile user, String serverId) {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "Forwarding hasJoinedServer(user, serverId) to vanilla auth service for " + user.getName());
+		}
 		try {
 			MethodHandle handle = MethodHandles.lookup().findSpecial(YggdrasilMinecraftSessionService.class, "hasJoinedServer", MethodType.methodType(GameProfile.class, GameProfile.class, String.class), NMSAuthEnvironmentService.class);
 			return (GameProfile) handle.invokeWithArguments(this, user, serverId);
@@ -54,8 +60,14 @@ public class NMSAuthEnvironmentService extends YggdrasilMinecraftSessionService 
 	}
 
 	public GameProfile hasJoinedServer(GameProfile user, String serverId, InetAddress address) throws AuthenticationUnavailableException {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "Auth check for " + user.getName() + " with address " + address + ", offlineMode=" + alwaysOnline.getOfflineMode());
+		}
 		if (alwaysOnline.getOfflineMode()) {
 			UUID uuid = this.database.getUUID(user.getName());
+			if (alwaysOnline.isDebug()) {
+				alwaysOnline.getNativeExecutor().log(Level.INFO, "Database UUID lookup for " + user.getName() + ": " + uuid);
+			}
 			if (uuid != null) {
 				return new GameProfile(uuid, user.getName());
 			} else {
@@ -68,8 +80,14 @@ public class NMSAuthEnvironmentService extends YggdrasilMinecraftSessionService 
 	}
 
 	public GameProfile hasJoinedServer(GameProfile user, String serverId) throws AuthenticationUnavailableException {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "Auth check for " + user.getName() + " without address, offlineMode=" + alwaysOnline.getOfflineMode());
+		}
 		if (alwaysOnline.getOfflineMode()) {
 			UUID uuid = this.database.getUUID(user.getName());
+			if (alwaysOnline.isDebug()) {
+				alwaysOnline.getNativeExecutor().log(Level.INFO, "Database UUID lookup for " + user.getName() + ": " + uuid);
+			}
 			if (uuid != null) {
 				return new GameProfile(uuid, user.getName());
 			} else {
@@ -81,8 +99,10 @@ public class NMSAuthEnvironmentService extends YggdrasilMinecraftSessionService 
 		}
 	}
 
-
 	protected GameProfile fillGameProfile(GameProfile profile, boolean requireSecure) {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "fillGameProfile(" + profile.getName() + ", requireSecure=" + requireSecure + ")");
+		}
 		try {
 			return (GameProfile) fillGameProfile.invoke(oldSessionService, profile, requireSecure);
 		} catch (IllegalAccessException | InvocationTargetException e) {
@@ -91,6 +111,9 @@ public class NMSAuthEnvironmentService extends YggdrasilMinecraftSessionService 
 	}
 
 	public GameProfile fillProfileProperties(GameProfile profile, boolean requireSecure) {
+		if (alwaysOnline.isDebug()) {
+			alwaysOnline.getNativeExecutor().log(Level.INFO, "fillProfileProperties(" + profile.getName() + ", requireSecure=" + requireSecure + ")");
+		}
 		try {
 			return (GameProfile) fillProfileProperties.invoke(oldSessionService, profile, requireSecure);
 		} catch (IllegalAccessException | InvocationTargetException e) {
