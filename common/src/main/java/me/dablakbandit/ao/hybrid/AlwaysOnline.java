@@ -108,12 +108,6 @@ public class AlwaysOnline implements IAlwaysOnline {
 			this.nativeExecutor.log(Level.WARNING, "*-*-*-*-*-*-*-*-*-*-*-*-*-*");
 		}
 
-		// No negative numbers.
-		int checkInterval = Math.max(0, Integer.valueOf(this.config.getProperty("check-interval", "30")));
-		if (checkInterval < 15) {
-			this.nativeExecutor.log(Level.WARNING, "Your check-interval is less than 15 seconds." + " This may cause issues and is recommended to be set to a higher number.");
-		}
-
 		// Kill any existing threads or listeners in case of a re-load
 		this.nativeExecutor.cancelAllOurTasks();
 		this.nativeExecutor.unregisterAllListeners();
@@ -142,7 +136,8 @@ public class AlwaysOnline implements IAlwaysOnline {
 		}
 		this.nativeExecutor.log(Level.INFO, "Database is ready to go!");
 		this.nativeExecutor.registerListener();
-		this.nativeExecutor.runAsyncRepeating(new MojangSessionCheck(this), 0, checkInterval, TimeUnit.SECONDS);
+		
+		MojangSessionCheck.start(this);
 
 		this.nativeExecutor.notifyOfflineMode(MOJANG_OFFLINE_MODE);
 		UpdateChecker.getInstance().start(nativeExecutor);

@@ -43,31 +43,12 @@ public class MojangSessionCheck implements Runnable {
 
 	@Override
 	public void run() {
-		if (!alwaysOnline.getCheckSessionStatus()) return;
-		int downServiceReport = 0;
-		if (this.useHeadSessionServer && !CheckMethods.directSessionServerStatus(alwaysOnline, this.gson))
-			downServiceReport++;
-		long currentTime = System.currentTimeMillis();
-		if (downServiceReport >= this.totalCheckMethods) {// Offline
-			// Reset lockout timer when down is detected (whether first time or again during lockout)
-			this.lockoutEndTime = currentTime + this.lockoutDurationMillis;
-			if (!alwaysOnline.getOfflineMode()) {
-				alwaysOnline.toggleOfflineMode();
-				this.alwaysOnline.saveState();
-				this.alwaysOnline.nativeExecutor.log(Level.INFO, "Mojang servers appear to be offline. Enabling mojang offline mode...");
-				if (!"null".equals(this.messageMojangOffline))
-					this.alwaysOnline.nativeExecutor.broadcastMessage(this.messageMojangOffline);
-			}
-		} else {// Online
-			// Only switch to online mode if lockout period has expired
-			if (currentTime >= this.lockoutEndTime && alwaysOnline.getOfflineMode()) {
-				alwaysOnline.toggleOfflineMode();
-				this.alwaysOnline.saveState();
-				this.alwaysOnline.nativeExecutor.log(Level.INFO, "Mojang servers appear to be online. Disabling mojang offline mode...");
-				if (!"null".equals(this.messageMojangOnline))
-					this.alwaysOnline.nativeExecutor.broadcastMessage(this.messageMojangOnline);
-			}
+
+		if (!alwaysOnline.getOfflineMode()) {
+			alwaysOnline.toggleOfflineMode();
+			this.alwaysOnline.saveState();
 		}
+
 	}
 
 }
