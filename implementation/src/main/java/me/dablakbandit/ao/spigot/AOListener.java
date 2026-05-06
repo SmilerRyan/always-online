@@ -17,12 +17,9 @@ public class AOListener implements Listener {
 	private final Pattern pat = Pattern.compile("^[a-zA-Z0-9_-]{3,16}$");    // The regex to verify usernames;
 
 	private final SpigotLoader spigotLoader;
-	private String MOTD;
 
 	public AOListener(SpigotLoader spigotLoader) {
 		this.spigotLoader = spigotLoader;
-		this.MOTD = ChatColor.translateAlternateColorCodes('&', this.spigotLoader.alwaysOnline.config.getProperty("message-motd-offline", "&eMojang servers are down,\\n&ebut you can still connect!"));
-		if ("null".equals(this.MOTD)) this.MOTD = null;
 	}
 
 	// Low priority so that we can go first. ignoreCancelled is set to false to prevent some security concern.

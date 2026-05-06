@@ -15,12 +15,10 @@ import java.util.UUID;
 public class SpongeListener extends ProxyListener {
 
 	private final SpongeLoader spongeLoader;
-	private final Component MOTD;
 
 	public SpongeListener(SpongeLoader spongeLoader) {
 		super(spongeLoader);
 		this.spongeLoader = spongeLoader;
-		this.MOTD = LegacyComponentSerializer.legacyAmpersand().deserialize(this.spongeLoader.getAOInstance().config.getProperty("message-motd-offline", "&eMojang servers are down,\n&ebut you can still connect!"));
 	}
 
 	@Listener
@@ -33,13 +31,6 @@ public class SpongeListener extends ProxyListener {
 				this.spongeLoader.getAOInstance().getDatabase().updatePlayer(username, ip, uuid);
 			}).plugin(spongeLoader.getPluginContainer());
 			Sponge.server().scheduler().submit(builder.build());
-		}
-	}
-
-	@Listener(order = Order.LATE)
-	public void onClientPing(ClientPingServerEvent event) {
-		if (spongeLoader.getAOInstance().getOfflineMode()) {
-			event.response().setDescription(this.MOTD);
 		}
 	}
 }

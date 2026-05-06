@@ -21,8 +21,6 @@ public class BungeeListener extends ProxyListener implements Listener {
 	public BungeeListener(BungeeLoader bungeeLoader) {
 		super(bungeeLoader);
 		this.bungeeLoader = bungeeLoader;
-		this.MOTD = ChatColor.translateAlternateColorCodes('&', this.bungeeLoader.getAOInstance().config.getProperty("message-motd-offline", "&eMojang servers are down,\\n&ebut you can still connect!"));
-		if ("null".equals(this.MOTD)) this.MOTD = null;
 	}
 
 	private void debug(String message) {

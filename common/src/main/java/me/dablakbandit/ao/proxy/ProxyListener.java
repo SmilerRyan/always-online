@@ -8,7 +8,6 @@ public abstract class ProxyListener {
 
 	protected final Pattern usernamePattern = Pattern.compile("^[a-zA-Z0-9_-]{3,16}$");    // The regex to verify usernames;
 
-	protected String MOTD;
 
 	protected NativeExecutor executor;
 
